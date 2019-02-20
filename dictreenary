@@ -1,0 +1,158 @@
+package dictreenary;
+
+import java.util.ArrayList;
+
+public class Dictreenary implements DictreenaryInterface {
+
+    // Fields
+    // -----------------------------------------------------------
+    TTNode root;
+    private ArrayList<String> al;
+
+    // Constructor
+    // -----------------------------------------------------------
+    Dictreenary() {
+        root = null;
+    }
+
+    // Methods
+    // -----------------------------------------------------------
+
+    @Override
+    public boolean isEmpty() {
+        return root == null;
+    }
+
+    @Override
+    public void addWord(String toAdd) {
+        toAdd = normalizeWord(toAdd);
+        root = addWord(root, toAdd.toCharArray(), 0);
+    }
+
+    @Override
+    public boolean hasWord(String query) {
+        return hasWord(root, query.toCharArray(), 0);
+    }
+
+    @Override
+    public String spellCheck(String query) {
+        String normalQuery = normalizeWord(query);
+        if (hasWord(query)) {
+            return query;
+        } else {
+            for (int i = 0; i < normalQuery.length() - 1; i++) {
+                String check = normalQuery.substring(0, i) + normalQuery.charAt(i + 1) + normalQuery.charAt(i)
+                        + normalQuery.substring(i + 2, normalQuery.length());
+                if (hasWord(check)) {
+                    return check;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public ArrayList<String> getSortedWords() {
+        al = new ArrayList<String>();
+        traverse(root, "");
+        return al;
+    }
+
+    // Helper Methods
+    // -----------------------------------------------------------
+
+    private String normalizeWord(String s) {
+        // Edge case handling: empty Strings illegal
+        if (s == null || s.equals("")) {
+            throw new IllegalArgumentException();
+        }
+        return s.trim().toLowerCase();
+    }
+
+    /*
+     * Returns: int less than 0 if c1 is alphabetically less than c2 0 if c1 is
+     * equal to c2 int greater than 0 if c1 is alphabetically greater than c2
+     */
+    /*
+     * private int compareChars(char c1, char c2) { return Character.toLowerCase(c1)
+     * - Character.toLowerCase(c2); }
+     */
+
+    // [!] Add your own helper methods here!
+    private TTNode addWord(TTNode r, char[] word, int pointer) {
+        if (r == null) {
+            r = new TTNode(word[pointer], false);
+        }
+
+        if (word[pointer] < r.letter) {
+            r.left = addWord(r.left, word, pointer);
+        } else if (word[pointer] > r.letter) {
+            r.right = addWord(r.right, word, pointer);
+        } else {
+            if (pointer + 1 < word.length) {
+                r.mid = addWord(r.mid, word, pointer + 1);
+            } else {
+                r.wordEnd = true;
+            }
+        }
+        return r;
+    }
+
+    private boolean hasWord(TTNode r, char[] word, int pointer) {
+        if (r == null) {
+            return false;
+        }
+
+        if (word[pointer] < r.letter) {
+            return hasWord(r.left, word, pointer);
+        } else if (word[pointer] > r.letter) {
+            return hasWord(r.right, word, pointer);
+        } else {
+            if (r.wordEnd && pointer == word.length - 1) {
+                return true;
+            } else if (pointer == word.length - 1) {
+                return false;
+            } else {
+                return hasWord(r.mid, word, pointer + 1);
+            }
+        }
+
+    }
+
+    private void traverse(TTNode r, String string) {
+        if (r != null) {
+            // Traverse Left
+            traverse(r.left, string);
+            string = string + r.letter;
+            if (r.wordEnd) {
+                al.add(string);
+            }
+            // Traverse middle
+            traverse(r.mid, string);
+            string = string.substring(0, string.length() - 1);
+            // Traverse right
+            traverse(r.right, string);
+        }
+    }
+
+    // TTNode Internal Storage
+    // -----------------------------------------------------------
+
+    /*
+     * Internal storage of Dictreenary words as represented using a Ternary Tree
+     * with TTNodes
+     */
+    private class TTNode {
+
+        boolean wordEnd;
+        char letter;
+        TTNode left, mid, right;
+
+        TTNode(char c, boolean w) {
+            letter = c;
+            wordEnd = w;
+        }
+
+    }
+
+}
